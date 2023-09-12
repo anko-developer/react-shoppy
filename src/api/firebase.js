@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { v4 as uuid } from "uuid";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
-import { getDatabase, ref, set, get } from "firebase/database";
+import { getDatabase, ref, set, get, remove } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -36,7 +36,7 @@ export function onUserStateChange(callback) {
 async function adminUser(user) {
   // 2. 사용자가 어드민 권한을 가지고 있는지 확인!
   // 3. {...user, isAdmin: true/false}
-  return get(ref(database, 'admins')).then((snapshot) => {
+  return get(ref(database, 'admins')).then(snapshot => {
     if (snapshot.exists()) {
       const admins = snapshot.val();
       console.log(admins);
@@ -56,4 +56,29 @@ export async function  addNewProduct(product, image) {
     image,
     options: product.options.split(','),
   })
+}
+
+export async function getProducts() {
+  return get(ref(database, 'products')).then(snapshot => {
+    if(snapshot.exists()) {
+      return Object.values(snapshot.val());
+    }
+    return [];
+  });
+}
+
+export async function getCart(userId) {
+  return get(ref(database, `carts/${userId}`))
+  .then(snapshot => {
+    const items = snapshot.val() || {};
+    return Object.values(items);
+  });
+}
+
+export async function addOrupdateToCart(userId, product) {
+  return set(ref(database, `carts/${userId}/${product.id}`), product);
+}
+
+export async function removeFromCart(userId, productId) {
+  return remove(ref(database, `carts/${userId}/${productId}`));
 }
