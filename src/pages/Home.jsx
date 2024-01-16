@@ -1,13 +1,5 @@
-import React from 'react';
-import Products from '../components/Products';
-import Banner from '../components/Banner';
+import React from "react";
 
 export default function Home() {
-  return (
-    <>
-      <Banner />
-      <Products />
-    </>
-  );
+  return <div>Home</div>;
 }
-
