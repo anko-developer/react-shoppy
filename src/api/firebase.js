@@ -1,8 +1,14 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
-import { getDatabase, ref, get, set } from "firebase/database";
-import { v4 as uuid } from 'uuid';
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { getDatabase, ref, get, set, remove } from "firebase/database";
+import { v4 as uuid } from "uuid";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -35,15 +41,14 @@ export function onUserStateChange(callback) {
 async function adminUser(user) {
   // 2. 사용자가 어드민 권한을 가지고 있는지 확인!
   // 3. {..user, isAdmin: true / false}
-  return get(ref(database, 'admins'))
-    .then(snapshot => {
-      if(snapshot.exists()) {
-        const admins = snapshot.val();
-        const isAdmin = admins.includes(user.uid);
-        return {...user, isAdmin};
-      } 
-      return user;
-    })
+  return get(ref(database, "admins")).then((snapshot) => {
+    if (snapshot.exists()) {
+      const admins = snapshot.val();
+      const isAdmin = admins.includes(user.uid);
+      return { ...user, isAdmin };
+    }
+    return user;
+  });
 }
 
 export async function addNewProduct(product, image) {
@@ -53,15 +58,30 @@ export async function addNewProduct(product, image) {
     id,
     price: parseInt(product.price),
     image,
-    options: product.options.split(','),
-  })
+    options: product.options.split(","),
+  });
 }
 
 export async function getProducts() {
-  return get(ref(database, 'products')).then(snapshot => {
+  return get(ref(database, "products")).then((snapshot) => {
     if (snapshot.exists()) {
       return Object.values(snapshot.val());
     }
     return [];
-  })
+  });
+}
+
+export async function getCart(userId) {
+  return get(ref(database, `carts/${userId}`)).then((snapshot) => {
+    const items = snapshot.val() || {};
+    return Object.values(items);
+  });
+}
+
+export async function addOrUpdateToCart(userId, product) {
+  return set(ref(database, `carts/${userId}/${product.id}`), product);
+}
+
+export async function removeFromCart(userId, productId) {
+  return remove(ref(database, `carts/${userId}/${productId}`));
 }
